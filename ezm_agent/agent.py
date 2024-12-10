@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import psutil
 from datetime import datetime
 from time import time
@@ -14,10 +15,19 @@ import shutil
 import rpyc
 import threading
 import multiprocessing
+from concurrent.futures import ThreadPoolExecutor
 from .sign import sign
 from .logger import logger
 from .websocket import WebSocketClient
 from .profiler import start_service
+
+if sys.version_info < (3, 9):
+    async def _to_thread(func, *args, **kwargs):
+        loop = asyncio.get_running_loop()
+        with ThreadPoolExecutor() as pool:
+            return await loop.run_in_executor(pool, lambda: func(*args, **kwargs))
+
+    asyncio.to_thread = _to_thread
 
 class Agent:
     def __init__(self, server, app_id, app_secret):
@@ -1037,7 +1047,7 @@ class Agent:
         processes = []
         for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
             try:
-                if 'python' in proc.info['name'] or (proc.info.get('cmdline') and 'python' in proc.info.cmdline[0].lower()):
+                if 'python' in proc.info['name'].lower() or (proc.info.get('cmdline') and 'python' in proc.info.cmdline[0].lower()):
                     pid = proc.info['pid']
                     cmdline = proc.info.get('cmdline')
                     if cmdline:
