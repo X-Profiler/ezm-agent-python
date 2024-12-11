@@ -31,6 +31,7 @@ if sys.version_info < (3, 9):
 
 class Agent:
     def __init__(self, server, app_id, app_secret):
+        logger.info(f'Profiler pid: {os.getppid()}, Agent pid: {os.getpid()}')
         self.profiler = connect_to_profiler(os.getppid())
 
         self.ws_client = WebSocketClient(server, app_id, app_secret)
@@ -1115,6 +1116,8 @@ class Agent:
                 'timestamp': timestamp
             }
             signature = sign(params, token)
+            if not server.startswith('http'):
+                server = f'http://{server}'
             url = f"{server}/xapi/upload_from_xtransit?{parse.urlencode({'fileId': file_id, 'fileType': file_type, 'nonce': nonce, 'timestamp': timestamp, 'signature': signature})}"
             session = requests.Session()
             gzip_file_path = await self.gzip_file(file_path)

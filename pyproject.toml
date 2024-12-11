@@ -1,6 +1,6 @@
 [project]
 name = "ezm_agent"
-version = "0.0.2"
+version = "0.0.4"
 authors = [
   { name="noodanee", email="noodanee@qq.com" },
 ]
@@ -13,7 +13,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "psutil>=6.1.0",
-    "rpyc>=6.0.1",
-    "websockets>=14.1",
+    "psutil",
+    "rpyc",
+    "websockets",
 ]

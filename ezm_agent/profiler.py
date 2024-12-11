@@ -13,19 +13,22 @@ from .logger import logger
 
 class SimpleProfiler:
     def __init__(self):
+        self._lock = threading.Lock()
+        self._stop_signal = threading.Event()
+
+    def _reset_state(self):
         self.samples = defaultdict(list)
         self.frames = []
         self.frame_to_index = {}
         self.thread_name_map = {}
         self.output_filepath = None
-        self._lock = threading.Lock()
-        self._stop_signal = threading.Event()
 
     def simple(self, duration = 30.0, interval = 0.001):
         if self.is_running():
             logger.info('Profiling is already in progress...')
             return None
 
+        self._reset_state()
         self.output_filepath = self._generate_filepath()
         logger.info(f"Profiling to {self.output_filepath} for {duration} seconds with interval {interval}")
 
@@ -144,6 +147,8 @@ class SimpleProfiler:
         os.makedirs(os.path.dirname(output_file) or '.', exist_ok=True)
         with open(output_file, 'w') as f:
             json.dump(speedscope_data, f)
+            f.flush()
+            os.fsync(f.fileno())
 
         logger.info(f"\nProfile saved to: {output_file}")
         logger.info(f"Total samples: {sum(len(s) for s in self.samples.values())}")
