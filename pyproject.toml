@@ -1,6 +1,6 @@
 [project]
 name = "ezm_agent"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="noodanee", email="noodanee@qq.com" },
 ]

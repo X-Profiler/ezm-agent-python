@@ -3,7 +3,7 @@ import os
 import sys
 import psutil
 from datetime import datetime
-from time import time
+import time
 import asyncio
 import platform
 import uuid
@@ -960,7 +960,7 @@ class Agent:
             'data': {
                 'cpu_count': cpu_count,
                 'total_memory': total_memory,
-                'uptime': int(time() - psutil.boot_time()),
+                'uptime': int(time.time() - psutil.boot_time()),
                 'used_cpu': used_cpu,
                 'free_memory': free_memory,
                 'load1': load1,
@@ -1135,8 +1135,15 @@ def get_socket_path(pid=None):
 
 def connect_to_profiler(pid=None):
     socket_path = get_socket_path(pid)
-    conn = rpyc.utils.factory.unix_connect(socket_path, config={'allow_public_attrs': True, 'allow_all_attrs': True})
-    return conn.root
+    delay = 1
+    for _ in range(5):
+        try:
+            conn = rpyc.utils.factory.unix_connect(socket_path, config={'allow_public_attrs': True, 'allow_all_attrs': True})
+            return conn.root
+        except ConnectionRefusedError:
+            time.sleep(delay)
+            delay <<= 1
+    logger.error(f'Failed to connect to profiler service at {socket_path}, giving up.')
 
 def start(server, app_id, app_secret):
     server_thread = threading.Thread(target=start_service, daemon=True, name='SimpleProfiler.ServiceThread')
